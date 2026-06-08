@@ -2,3 +2,5 @@
 
 export { useUser } from "./useUser";
 export { usePiano } from "./usePiano";
+export { usePitchDetection } from "./usePitchDetection";
+export type { PitchDetectionState } from "./usePitchDetection";

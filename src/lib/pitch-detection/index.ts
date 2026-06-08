@@ -1,1 +1,2 @@
-// Pitch detection — note identification and frequency analysis from microphone input.
+export { computeYin, frequencyToNote, noteNameToMidi, downsample } from "./yin";
+export type { YinResult, YinConfig } from "./yin";
