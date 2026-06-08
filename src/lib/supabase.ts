@@ -1,1 +1,4 @@
-// Supabase client configuration and typed database helpers for PianoPath.
+export type { SupabaseBrowserClient, SupabaseServerClient } from "./supabase/types";
+
+export { createClient } from "./supabase/client";
+export { createServerClient } from "./supabase/server";
