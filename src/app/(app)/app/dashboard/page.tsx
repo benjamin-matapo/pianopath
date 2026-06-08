@@ -6,15 +6,19 @@ import {
   BookOpen,
   ChevronRight,
   Flame,
+  LogIn,
   Music,
   Sparkles,
   Star,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
+import { useUser } from "@/hooks/useUser";
 import { CURRICULUM } from "@/lib/curriculum/curriculum-data";
 import type { ModuleWithLessons } from "@/lib/curriculum/curriculum-data";
+import { useProgressStore } from "@/store/progress-store";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -69,6 +73,13 @@ function generateHeatmapData(): { label: string; active: boolean; intensity: num
   return result;
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 function StatCard({ icon: Icon, label, value, accent }: {
   icon: React.ElementType;
   label: string;
@@ -103,7 +114,7 @@ function ModuleCard({ mod, index }: { mod: ModuleWithLessons; index: number }) {
       href={`/app/lessons/${mod.lessons[0]?.slug ?? "#"}`}
       variants={itemVariants}
       whileHover={{ y: -2 }}
-      className={`group relative flex w-48 flex-shrink-0 flex-col rounded-2xl border border-white/[0.08] bg-gradient-to-br ${gradient} p-4 backdrop-blur-xl transition-all hover:border-white/[0.15]`}
+      className={`group relative flex w-full flex-col rounded-2xl border border-white/[0.08] bg-gradient-to-br ${gradient} p-4 backdrop-blur-xl transition-all hover:border-white/[0.15] sm:w-48`}
     >
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06]">
@@ -137,14 +148,20 @@ function ModuleCard({ mod, index }: { mod: ModuleWithLessons; index: number }) {
 }
 
 export default function DashboardPage() {
+  const { user } = useUser();
+  const xpPoints = useProgressStore((s) => s.xpPoints);
+  const currentStreak = useProgressStore((s) => s.currentStreak);
+  const lessonProgress = useProgressStore((s) => s.lessonProgress);
   const heatmap = useMemo(() => generateHeatmapData(), []);
+  const isGuest = !user;
+  const displayName = user?.user_metadata?.display_name ?? user?.email?.split("@")[0] ?? "Pianist";
 
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="mx-auto flex max-w-6xl flex-col gap-8 p-4 sm:p-8"
+      className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:gap-8 sm:p-8"
     >
       <motion.div
         variants={itemVariants}
@@ -154,37 +171,53 @@ export default function DashboardPage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(251,191,36,0.08)_0%,_transparent_55%)]" />
 
         <div className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-amber-400/90">Welcome back</p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Pianist
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-amber-400/90">
+                {getGreeting()}
+              </p>
+              <h1 className="mt-1 truncate text-2xl font-bold tracking-tight text-white sm:text-4xl">
+                {isGuest ? "Guest 🎹" : displayName}
               </h1>
-              <p className="mt-1 text-sm text-zinc-500">Ready for today&apos;s practice?</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                {isGuest ? "Start playing right away — no account needed" : "Ready for today&apos;s practice?"}
+              </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2">
-                <Flame className="h-5 w-5 text-amber-400" />
-                <div>
-                  <p className="text-lg font-bold text-amber-400">5</p>
-                  <p className="text-[10px] text-amber-500/80">day streak</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 rounded-xl bg-indigo-500/10 px-4 py-2">
-                <Zap className="h-5 w-5 text-indigo-400" />
-                <div>
-                  <p className="text-lg font-bold text-indigo-400">1,280</p>
-                  <p className="text-[10px] text-indigo-500/80">XP</p>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {isGuest ? (
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-amber-500/20 hover:text-amber-300"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In to Sync Progress
+                </Link>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2">
+                    <Flame className="h-5 w-5 text-amber-400" />
+                    <div>
+                      <p className="text-lg font-bold text-amber-400">{currentStreak}</p>
+                      <p className="text-[10px] text-amber-500/80">day streak</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl bg-indigo-500/10 px-4 py-2">
+                    <Zap className="h-5 w-5 text-indigo-400" />
+                    <div>
+                      <p className="text-lg font-bold text-indigo-400">{xpPoints.toLocaleString()}</p>
+                      <p className="text-[10px] text-indigo-500/80">XP</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={Flame} label="Current Streak" value="5 days" accent="from-orange-500/10 to-orange-600/5" />
-        <StatCard icon={Star} label="Lessons Done" value={12} accent="from-amber-500/10 to-amber-600/5" />
+        <StatCard icon={Flame} label="Current Streak" value={isGuest ? `${currentStreak} day` : `${currentStreak} days`} accent="from-orange-500/10 to-orange-600/5" />
+        <StatCard icon={Star} label="Lessons Done" value={Object.values(lessonProgress).filter((s) => s === "completed").length} accent="from-amber-500/10 to-amber-600/5" />
         <StatCard icon={Award} label="Achievements" value={3} accent="from-indigo-500/10 to-indigo-600/5" />
         <StatCard icon={Music} label="Minutes Today" value={18} accent="from-emerald-500/10 to-emerald-600/5" />
       </div>
@@ -199,7 +232,7 @@ export default function DashboardPage() {
             View all →
           </a>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-2">
           {CURRICULUM.map((mod, i) => (
             <ModuleCard key={mod.id} mod={mod} index={i} />
           ))}

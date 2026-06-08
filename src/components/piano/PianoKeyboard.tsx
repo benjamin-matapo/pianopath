@@ -168,8 +168,56 @@ export function PianoKeyboard({
   return (
     <div className="relative select-none space-y-3" role="region" aria-label="Piano keyboard">
       <NoteDisplay currentNote={currentNote} isNotePlaying={isNotePlaying} />
-      <div className="relative flex">
-        {whiteKeys.map((key) => {
+      <div className="overflow-x-auto pb-2" style={{ touchAction: "manipulation" }}>
+        <div className="relative flex min-w-[560px]">
+          {whiteKeys.map((key) => {
+            const isPressed = pressedNotes.has(key.fullName);
+            const isHighlighted = highlightedNotes?.includes(key.fullName) ?? false;
+            const isActive = activeNotes?.includes(key.fullName) ?? false;
+
+            return (
+              <motion.div
+                key={key.fullName}
+                className="relative flex-1 cursor-pointer"
+                onMouseDown={() => handleNoteOn(key.fullName)}
+                onMouseUp={() => handleNoteOff(key.fullName)}
+                onMouseLeave={() => {
+                  if (pressedNotesRef.current.has(key.fullName)) {
+                    handleNoteOff(key.fullName);
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleNoteOn(key.fullName);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleNoteOff(key.fullName);
+                }}
+                onTouchCancel={(e) => {
+                  e.preventDefault();
+                  handleNoteOff(key.fullName);
+                }}
+                animate={{
+                  y: isPressed ? 2 : 0,
+                  backgroundColor: isPressed ? "#6366f1" : isActive ? "#a5b4fc" : "#f4f4f5",
+                }}
+                transition={{ duration: 0.1, ease: "easeOut" }}
+                style={{
+                  height: 180,
+                  border: "1px solid #d4d4d8",
+                  borderBottomLeftRadius: 6,
+                  borderBottomRightRadius: 6,
+                  boxShadow: isHighlighted
+                    ? "inset 0 0 0 2px #22c55e, 0 0 12px rgba(34,197,94,0.5)"
+                    : "inset 0 -2px 4px rgba(0,0,0,0.1)",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {blackKeys.map((key) => {
           const isPressed = pressedNotes.has(key.fullName);
           const isHighlighted = highlightedNotes?.includes(key.fullName) ?? false;
           const isActive = activeNotes?.includes(key.fullName) ?? false;
@@ -177,67 +225,45 @@ export function PianoKeyboard({
           return (
             <motion.div
               key={key.fullName}
-              className="relative flex-1 cursor-pointer"
-              onPointerDown={() => handleNoteOn(key.fullName)}
-              onPointerUp={() => handleNoteOff(key.fullName)}
-              onPointerLeave={() => {
+              className="absolute z-10 cursor-pointer"
+              style={{
+                left: getBlackKeyLeft(key),
+                width: `calc((100% - ${totalWhiteKeys - 1}px) / ${totalWhiteKeys} * 0.6)`,
+                height: 108,
+                borderBottomLeftRadius: 4,
+                borderBottomRightRadius: 4,
+                boxShadow: isHighlighted
+                  ? "0 0 0 2px #22c55e, 0 0 12px rgba(34,197,94,0.5)"
+                  : "0 3px 6px rgba(0,0,0,0.3)",
+              }}
+              onMouseDown={() => handleNoteOn(key.fullName)}
+              onMouseUp={() => handleNoteOff(key.fullName)}
+              onMouseLeave={() => {
                 if (pressedNotesRef.current.has(key.fullName)) {
                   handleNoteOff(key.fullName);
                 }
               }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleNoteOn(key.fullName);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleNoteOff(key.fullName);
+              }}
+              onTouchCancel={(e) => {
+                e.preventDefault();
+                handleNoteOff(key.fullName);
+              }}
               animate={{
                 y: isPressed ? 2 : 0,
-                backgroundColor: isPressed ? "#6366f1" : isActive ? "#a5b4fc" : "#f4f4f5",
+                backgroundColor: isPressed ? "#9333ea" : isActive ? "#a78bfa" : "#18181b",
               }}
               transition={{ duration: 0.1, ease: "easeOut" }}
-              style={{
-                height: 180,
-                border: "1px solid #d4d4d8",
-                borderBottomLeftRadius: 6,
-                borderBottomRightRadius: 6,
-                boxShadow: isHighlighted
-                  ? "inset 0 0 0 2px #22c55e, 0 0 12px rgba(34,197,94,0.5)"
-                  : "inset 0 -2px 4px rgba(0,0,0,0.1)",
-              }}
             />
           );
         })}
       </div>
-
-      {blackKeys.map((key) => {
-        const isPressed = pressedNotes.has(key.fullName);
-        const isHighlighted = highlightedNotes?.includes(key.fullName) ?? false;
-        const isActive = activeNotes?.includes(key.fullName) ?? false;
-
-        return (
-          <motion.div
-            key={key.fullName}
-            className="absolute z-10 cursor-pointer"
-            style={{
-              left: getBlackKeyLeft(key),
-              width: `calc((100% - ${totalWhiteKeys - 1}px) / ${totalWhiteKeys} * 0.6)`,
-              height: 108,
-              borderBottomLeftRadius: 4,
-              borderBottomRightRadius: 4,
-              boxShadow: isHighlighted
-                ? "0 0 0 2px #22c55e, 0 0 12px rgba(34,197,94,0.5)"
-                : "0 3px 6px rgba(0,0,0,0.3)",
-            }}
-            onPointerDown={() => handleNoteOn(key.fullName)}
-            onPointerUp={() => handleNoteOff(key.fullName)}
-            onPointerLeave={() => {
-              if (pressedNotesRef.current.has(key.fullName)) {
-                handleNoteOff(key.fullName);
-              }
-            }}
-            animate={{
-              y: isPressed ? 2 : 0,
-              backgroundColor: isPressed ? "#9333ea" : isActive ? "#a78bfa" : "#18181b",
-            }}
-            transition={{ duration: 0.1, ease: "easeOut" }}
-          />
-        );
-      })}
 
       {!isLoaded && (
         <div className="absolute inset-x-0 -bottom-6 text-center text-xs text-zinc-500">

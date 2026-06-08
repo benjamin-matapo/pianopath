@@ -27,7 +27,7 @@ export default function Home() {
 
         <div className="flex gap-4">
           <Link
-            href="/login"
+            href="/app/dashboard"
             className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-sm font-semibold text-zinc-950 shadow-lg shadow-amber-900/30 transition hover:from-amber-400 hover:to-amber-500"
           >
             Get Started
